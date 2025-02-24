@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  app:
+    # user: "1000:1000"
+    build:
+      context: ./
+      dockerfile: docker/node.dockerfile
+    container_name: duldul-app
+    image: duldul-app
+    volumes:
+      - /opt/docker/duldul-app/storage:/var/www/storage
+    restart: always
+    ports:
+      - "3000:3000"
+    expose: 
+      - "3000"
