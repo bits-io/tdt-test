@@ -23,14 +23,14 @@ export class Article {
     @JoinColumn()
     category: ArticleCategory;
     
-    @CreateDateColumn({ type: 'timestamp', default: () => "CURRENT_TIMESTAMP"})
-    created_at: Date;
-    
-    @UpdateDateColumn({ type: 'timestamp', default: () => "CURRENT_TIMESTAMP"})
-    updated_at: Date;
-    
+    @CreateDateColumn({ type: 'timestamp', default: () => "CURRENT_TIMESTAMP" })
+    createdAt: Date;
+
+    @UpdateDateColumn({ type: 'timestamp', default: () => "CURRENT_TIMESTAMP" })
+    updatedAt: Date;
+
     @DeleteDateColumn({ type: 'timestamp', nullable: true })
-    deleted_at: Date;  
+    deletedAt: Date;      
 
     @OneToMany(() => ArticleComment, comment => comment.article)
     comment: ArticleComment[];

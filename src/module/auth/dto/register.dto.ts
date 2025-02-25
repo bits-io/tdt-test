@@ -1,5 +1,6 @@
-import { IsNotEmpty, Validate } from "class-validator";
+import { IsIn, IsNotEmpty, Validate } from "class-validator";
 import { IsUnique } from "src/helpers/decorator.helper";
+import Role from "src/module/user/enum/role.enum";
 
 export class RegisterDto {
     @IsNotEmpty()
@@ -18,5 +19,6 @@ export class RegisterDto {
     password: string;
 
     @IsNotEmpty()
+    @IsIn(Object.values(Role))
     role: string;
 }

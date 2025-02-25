@@ -38,11 +38,11 @@ export class User {
     isActive: boolean;
 
     @CreateDateColumn({ type: 'timestamp', default: () => "CURRENT_TIMESTAMP"})
-    created_at: Date;
+    createdAt: Date;
 
     @UpdateDateColumn({ type: 'timestamp', default: () => "CURRENT_TIMESTAMP"})
-    updated_at: Date;
+    updatedAt: Date;
 
     @DeleteDateColumn({ type: 'timestamp', nullable: true })
-    deleted_at: Date;    
+    deletedAt: Date;    
 }

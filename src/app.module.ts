@@ -13,6 +13,7 @@ import { IsUnique } from './helpers/decorator.helper';
 import { ArticleModule } from './module/article/article.module';
 import { ArticleCategoryModule } from './module/article-category/article-category.module';
 import { ArticleCommentModule } from './module/article-comment/article-comment.module';
+import { PublicModule } from './public/public.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { ArticleCommentModule } from './module/article-comment/article-comment.m
     UserModule,
     ArticleModule,
     ArticleCategoryModule,
-    ArticleCommentModule,    
+    ArticleCommentModule,
+    PublicModule,    
   ],
   controllers: [AppController],
   providers: [

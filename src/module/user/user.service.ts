@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
 
@@ -23,8 +23,35 @@ export class UserService {
     });
   }
 
-  async findAll() {
-    return `This action returns all user`;
+  async countRows(search?: string) {
+    let criteria: FindOptionsWhere<User> | FindOptionsWhere<User>[];
+    if (search) {
+      criteria = [
+        { email: ILike(`%${search}%`) },
+        { phone: ILike(`%${search}%`) },
+      ];
+    }
+  
+    return await this.userRepository.count({
+      where: criteria,
+    });
+  }
+  
+  async findAll(page: number = 1, take: number = 25, search?: string, order: { [P in keyof User]?: 'ASC' | 'DESC' } = { id: 'DESC' }) {
+    let criteria: FindOptionsWhere<User> | FindOptionsWhere<User>[];
+    if (search) {
+      criteria = [
+        { email: ILike(`%${search}%`) },
+        { phone: ILike(`%${search}%`) },
+      ];
+    }
+  
+    return await this.userRepository.find({
+      skip: (page - 1) * take,
+      take: take,
+      where: criteria,
+      order: order
+    });
   }
 
   async findOneById(id: number, throwException: boolean = true, withDeleted: boolean = false) {
@@ -76,11 +103,21 @@ export class UserService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+    const user = await this.findOneById(id);
+    if (!user) throw new NotFoundException('User not found');
+
+    user.updatedAt = new Date();
+
+    Object.assign(user, updateUserDto);
+
+    return await this.userRepository.save(user);
   }
 
   async remove(id: number) {
-    return `This action removes a #${id} user`;
+    const user = await this.findOneById(id);
+    if (!user) throw new NotFoundException('User not found');
+
+    return await this.userRepository.softDelete({ id });
   }
 
   async hashPassword(password: string): Promise<string> {
@@ -97,7 +134,6 @@ export class UserService {
       password: await this.hashPassword(newPassword)
     });
   }
-
 
   async getProfile(userId: number) {
     const user = await this.findOneById(userId);
