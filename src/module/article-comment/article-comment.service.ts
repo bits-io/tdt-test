@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ArticleComment } from './entities/article-comment.entity';
 import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { ArticleService } from '../article/article.service';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class ArticleCommentService {
@@ -13,21 +14,26 @@ export class ArticleCommentService {
     @InjectRepository(ArticleComment)
     private articleCommentRepository: Repository<ArticleComment>,
     private articleService: ArticleService,
+    private userService: UserService,
   ) {}
 
   async create(createArticleCommentDto: CreateArticleCommentDto) {
     const article = await this.articleService.findOneById(createArticleCommentDto.articleId);
     if (!article) throw new BadRequestException('Invalid select category');
+
+    const user = await this.userService.findOneById(createArticleCommentDto.userId);
+    if (!user) throw new BadRequestException('Invalid select user');
         
     return await this.articleCommentRepository.save({
       ...createArticleCommentDto,
-      article: article
+      article: article,
+      user: user,
     });
   }
 
   async countRows(
     search?: string, 
-    options?: { articleId?: number }
+    options?: { articleId?: number, userId?: number }
   ) {
     let criteria: FindOptionsWhere<ArticleComment> | FindOptionsWhere<ArticleComment>[];
     if (search) {
@@ -42,6 +48,13 @@ export class ArticleCommentService {
         article: { id: options.articleId }
       }
     }
+
+    if (options?.userId) {
+      criteria = {
+        ...criteria,
+        user: { id: options.userId }
+      }
+    }
     
     return await this.articleCommentRepository.count({
       where: criteria,
@@ -52,7 +65,7 @@ export class ArticleCommentService {
     page: number = 1, 
     take: number = 25, 
     search?: string,
-    options?: { articleId?: number },
+    options?: { articleId?: number, userId?: number },
     order: { [P in keyof ArticleComment]?: 'ASC' | 'DESC' } = { id: 'DESC' }
   ) {
     let criteria: FindOptionsWhere<ArticleComment> | FindOptionsWhere<ArticleComment>[];
@@ -68,12 +81,19 @@ export class ArticleCommentService {
         article: { id: options.articleId }
       }
     }
+
+    if (options?.userId) {
+      criteria = {
+        ...criteria,
+        user: { id: options.userId }
+      }
+    }
     
     return await this.articleCommentRepository.find({
       skip: (page - 1) * take,
       take: take,
       where: criteria,
-      relations: { article: true },
+      relations: { article: true, user: true },
       order: order
     });
   }
@@ -83,7 +103,7 @@ export class ArticleCommentService {
         
     const articleComment = await this.articleCommentRepository.findOne({ 
       where: { id },  
-      relations: { article: true }
+      relations: { article: true, user: true }
     });
     if (!articleComment) throw new NotFoundException('Article comment not found');
         
@@ -98,6 +118,12 @@ export class ArticleCommentService {
       const article = await this.articleService.findOneById(updateArticleCommentDto.articleId);
       if (!article) throw new BadRequestException('Invalid select article');
       articleComment.article = article;
+    }
+
+    if (updateArticleCommentDto.userId) {
+      const user = await this.userService.findOneById(updateArticleCommentDto.userId);
+      if (!user) throw new BadRequestException('Invalid select user');
+      articleComment.user = user;
     }
 
     articleComment.updatedAt = new Date();

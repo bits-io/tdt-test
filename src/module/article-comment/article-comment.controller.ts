@@ -3,14 +3,22 @@ import { ArticleCommentService } from './article-comment.service';
 import { CreateArticleCommentDto } from './dto/create-article-comment.dto';
 import { UpdateArticleCommentDto } from './dto/update-article-comment.dto';
 import { ArticleComment } from './entities/article-comment.entity';
+import { User } from '../user/entities/user.entity';
+import { UserSession } from 'src/helpers/decorator.helper';
 
 @Controller('article-comment')
 export class ArticleCommentController {
   constructor(private readonly articleCommentService: ArticleCommentService) {}
 
   @Post()
-  create(@Body() createArticleCommentDto: CreateArticleCommentDto) {
-    return this.articleCommentService.create(createArticleCommentDto);
+  create(
+    @Body() createArticleCommentDto: CreateArticleCommentDto,
+    @UserSession() user: User,
+  ) {
+    return this.articleCommentService.create({
+      ...createArticleCommentDto,
+      userId: user.id
+    });
   }
 
   @Get()
@@ -41,8 +49,15 @@ export class ArticleCommentController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateArticleCommentDto: UpdateArticleCommentDto) {
-    return this.articleCommentService.update(+id, updateArticleCommentDto);
+  update(
+    @Param('id') id: string, 
+    @Body() updateArticleCommentDto: UpdateArticleCommentDto,
+    @UserSession() user: User,
+  ) {
+    return this.articleCommentService.update(+id, {
+      ...updateArticleCommentDto,
+      userId: user.id
+    });
   }
 
   @Delete(':id')

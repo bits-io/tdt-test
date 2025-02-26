@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Article } from './entities/article.entity';
 import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { ArticleCategoryService } from '../article-category/article-category.service';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class ArticleService {
@@ -13,15 +14,20 @@ export class ArticleService {
     @InjectRepository(Article)
     private articleRepository: Repository<Article>,
     private articleCategoryService: ArticleCategoryService,
+    private userService: UserService,
   ) {}
 
   async create(createArticleDto: CreateArticleDto) {
     const category = await this.articleCategoryService.findOneById(createArticleDto.categoryId);
     if (!category) throw new BadRequestException('Invalid select category');
+
+    const user = await this.userService.findOneById(createArticleDto.userId);
+    if (!user) throw new BadRequestException('Invalid select user');
     
     return await this.articleRepository.save({
       ...createArticleDto,
-      category: category
+      category: category,
+      user: user,
     });
   }
 
@@ -73,6 +79,7 @@ export class ArticleService {
       skip: (page - 1) * take,
       take: take,
       where: criteria,
+      relations: { category: true, comment: true, user: true },
       order: order
     });
   }
@@ -82,7 +89,7 @@ export class ArticleService {
     
     const article = await this.articleRepository.findOne({ 
       where: { id },  
-      relations: { category: true, comment: true }
+      relations: { category: true, comment: true, user: true }
     });
     if (!article) throw new NotFoundException('Article not found');
     
@@ -97,6 +104,12 @@ export class ArticleService {
       const category = await this.articleCategoryService.findOneById(updateArticleDto.categoryId);
       if (!category) throw new BadRequestException('Invalid select category');
       article.category = category;
+    }
+
+    if (updateArticleDto.userId) {
+      const user = await this.userService.findOneById(updateArticleDto.userId);
+      if (!user) throw new BadRequestException('Invalid select user');
+      article.user = user;
     }
 
     article.updatedAt = new Date();

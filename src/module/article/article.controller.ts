@@ -4,7 +4,8 @@ import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article } from './entities/article.entity';
 import { UserRoleGuard } from 'src/guards/user-role.guard';
-import { Roles } from 'src/helpers/decorator.helper';
+import { Roles, UserSession } from 'src/helpers/decorator.helper';
+import { User } from '../user/entities/user.entity';
 
 @Controller('article')
 export class ArticleController {
@@ -13,8 +14,14 @@ export class ArticleController {
   @UseGuards(UserRoleGuard)
   @Roles(['Admin'])
   @Post()
-  create(@Body() createArticleDto: CreateArticleDto) {
-    return this.articleService.create(createArticleDto);
+  create(
+    @Body() createArticleDto: CreateArticleDto,
+    @UserSession() user: User
+  ) {
+    return this.articleService.create({
+      ...createArticleDto,
+      userId: user.id
+    });
   }
 
   @Get()
@@ -47,8 +54,15 @@ export class ArticleController {
   @UseGuards(UserRoleGuard)
   @Roles(['Admin'])
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateArticleDto: UpdateArticleDto) {
-    return this.articleService.update(+id, updateArticleDto);
+  update(
+    @Param('id') id: string, 
+    @Body() updateArticleDto: UpdateArticleDto,
+    @UserSession() user: User,
+  ) {
+    return this.articleService.update(+id, {
+      ...updateArticleDto,
+      userId: user.id
+    });
   }
 
   @UseGuards(UserRoleGuard)
